@@ -1,7 +1,5 @@
 package email.app.service;
 
-import java.util.List;
-
 import javax.transaction.Transactional;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -18,18 +16,16 @@ import com.app.model.SendEmailRequest;
 import com.app.model.SendEmailResponse;
 
 import email.app.entity.EmailCredentials;
-import email.app.entity.EmailInbox;
-import email.app.entity.EmailOutbox;
-import email.app.respository.CredentialsRepository;
+import email.app.respository.EmailCredentialsRepository;
 import email.app.respository.InboxRepository;
 import email.app.respository.OutboxRepository;
 
 @Service
-@Transactional 
-public class DataService {
+@Transactional
+public class EmailServerService {
 
 	@Autowired
-	private CredentialsRepository credentialsRepository;
+	private EmailCredentialsRepository emailCredentialsRepository;
 
 	@Autowired
 	private InboxRepository inboxRepository;
@@ -38,20 +34,20 @@ public class DataService {
 	private OutboxRepository outboxRepository;
 
 	public LoginResponse loginUser(LoginRequest request) {
-		EmailCredentials userDbCredentials = credentialsRepository.getCredentialsUsingEmail(request.getEmail());
+		EmailCredentials userCredentialsDb = emailCredentialsRepository.getCredentialsUsingEmail(request.getEmail());
 		LoginResponse response = new LoginResponse();
-		
-		if (userDbCredentials == null) {
+
+		if (userCredentialsDb == null) {
 			response.setError(true);
 			response.setErrorMessage("Email not found.");
 			return response;
 		}
-		
-		if (userDbCredentials.getPassword().equals(request.getPassword())) {
+
+		if (userCredentialsDb.getPassword().equals(request.getPassword())) {
 			String apiKey = Utils.createApiKey(10);
-			
-			credentialsRepository.saveApiKey(apiKey, userDbCredentials.getEmailCredentialsId());
-			
+
+			emailCredentialsRepository.saveApiKey(apiKey, userCredentialsDb.getEmailCredentialsId());
+
 			response.setApikey(apiKey);
 			response.setError(false);
 			return response;
@@ -61,83 +57,90 @@ public class DataService {
 			return response;
 		}
 	}
-	
+
 	public LogoutResponse logoutUser(LogoutRequest request) {
-		EmailCredentials userDbCredentials = credentialsRepository.getCredentialsUsingEmail(request.getEmail());
+		EmailCredentials userCredentialsDb = emailCredentialsRepository.getCredentialsUsingEmail(request.getEmail());
 		LogoutResponse response = new LogoutResponse();
-		if(!userDbCredentials.getApikey().equals(request.getApikey())) {
+
+		if (!userCredentialsDb.getApikey().equals(request.getApikey())) {
 			response.setError(true);
 			response.setErrorMessage("Incorrect API Key");
 			return response;
-		}else if(userDbCredentials.getEmail() == null) {
+		} else if (userCredentialsDb.getEmail() == null) {
 			response.setError(true);
 			response.setErrorMessage("Email not found");
 			return response;
 		} else {
-			credentialsRepository.deleteApiKey(userDbCredentials.getEmailCredentialsId());
+			emailCredentialsRepository.deleteApiKey(userCredentialsDb.getEmailCredentialsId());
 			response.setError(false);
 			return response;
 		}
 	}
-	
+
 	public SendEmailResponse sendEmail(SendEmailRequest request) {
-		EmailCredentials senderDbCredentials = credentialsRepository.getCredentialsUsingEmail(request.getSendersEmail());
-		EmailCredentials receiverDbCredentials = credentialsRepository.getCredentialsUsingEmail(request.getReceiversEmail());
+		EmailCredentials senderCredentialsDb = emailCredentialsRepository.getCredentialsUsingEmail(request.getSendersEmail());
+		EmailCredentials receiverCredentialsDb = emailCredentialsRepository.getCredentialsUsingEmail(request.getReceiversEmail());
 		SendEmailResponse response = new SendEmailResponse();
-		if(senderDbCredentials.getApikey() == null) {
+
+		if (senderCredentialsDb.getApikey() == null) {
 			response.setError(true);
 			response.setErrorMessage("User Not Logged In");
 			return response;
-		}else if(!senderDbCredentials.getApikey().equals(request.getApiKey())){
+		} else if (!senderCredentialsDb.getApikey().equals(request.getApiKey())) {
 			response.setError(true);
 			response.setErrorMessage("Incorrect API Key");
 			return response;
-		} else if(senderDbCredentials.getEmail() == null) {
+		} else if (senderCredentialsDb.getEmail() == null) {
 			response.setError(true);
 			response.setErrorMessage("Incorrect Sender's Email");
 			return response;
-		} else if(receiverDbCredentials.getEmail() == null) {
+		} else if (receiverCredentialsDb.getEmail() == null) {
 			response.setError(true);
 			response.setErrorMessage("Incorrect Receiver's Email");
 			return response;
-		} else {
-			outboxRepository.saveEmail(receiverDbCredentials.getEmailCredentialsId(), senderDbCredentials.getEmailCredentialsId(), request.getBody(), Utils.getTime());
-			inboxRepository.saveEmail(receiverDbCredentials.getEmailCredentialsId(), senderDbCredentials.getEmailCredentialsId(), request.getBody(), Utils.getTime());
-			response.setError(false);
-			return response;
 		}
+
+		outboxRepository.saveEmail(receiverCredentialsDb.getEmailCredentialsId(),
+				senderCredentialsDb.getEmailCredentialsId(), request.getBody(), Utils.getTime());
+		inboxRepository.saveEmail(receiverCredentialsDb.getEmailCredentialsId(),
+				senderCredentialsDb.getEmailCredentialsId(), request.getBody(), Utils.getTime());
+		response.setError(false);
+		return response;
 	}
-	
+
 	public GetEmailResponse checkInbox(GetEmailRequest request) {
-		EmailCredentials userDbCredentials = credentialsRepository.getCredentialsUsingEmail(request.getEmail());
+		
+		EmailCredentials userCredentialsDb = emailCredentialsRepository.getCredentialsUsingEmail(request.getEmail());
 		GetEmailResponse response = new GetEmailResponse();
-		if (userDbCredentials.getApikey() == null) {
+		
+		if (userCredentialsDb.getApikey() == null) {
 			response.setError(true);
 			response.setErrorMessage("User Not Logged In");
 			return response;
-		} else if(!userDbCredentials.getApikey().equals(request.getApiKey())) {
+		} else if (!userCredentialsDb.getApikey().equals(request.getApiKey())) {
 			response.setError(true);
 			response.setErrorMessage("User Not Logged In");
 			return response;
-		} else if (userDbCredentials.getEmail() == null) {
+		} else if (userCredentialsDb.getEmail() == null) {
 			response.setError(true);
 			response.setErrorMessage("Email Not Found");
 			return response;
-		} else {
-			response.setError(false);
-			response.setEmails(inboxRepository.getEmails(userDbCredentials.getEmailCredentialsId()));
-			return response;
 		}
+		
+		response.setError(false);
+		response.setEmails(inboxRepository.getEmails(userCredentialsDb.getEmailCredentialsId()));
+		return response;
 	}
-	
+
 	public CheckOutboxResponse checkOutbox(GetEmailRequest request) {
-		EmailCredentials userDbCredentials = credentialsRepository.getCredentialsUsingEmail(request.getEmail());
+		EmailCredentials userDbCredentials = emailCredentialsRepository.getCredentialsUsingEmail(request.getEmail());
 		CheckOutboxResponse response = new CheckOutboxResponse();
+		
 		if (userDbCredentials.getApikey() == null) {
 			response.setError(true);
 			response.setErrorMessage("User Not Logged In");
 			return response;
-		} else if(!userDbCredentials.getApikey().equals(request.getApiKey())) {
+		} else if (!userDbCredentials.getApikey().equals(request.getApiKey())) {
 			response.setError(true);
 			response.setErrorMessage("User Not Logged In");
 			return response;
@@ -145,18 +148,10 @@ public class DataService {
 			response.setError(true);
 			response.setErrorMessage("Email Not Found");
 			return response;
-		} else {
-			response.setError(false);
-			response.setEmails(outboxRepository.getEmails(userDbCredentials.getEmailCredentialsId()));
-			return response;
 		}
-	}
-
-	public List<EmailInbox> listAllInbox() {
-		return inboxRepository.getAllRows();
-	}
-
-	public List<EmailOutbox> listAllOutbox() {
-		return outboxRepository.getAllRows();
+		
+		response.setError(false);
+		response.setEmails(outboxRepository.getEmails(userDbCredentials.getEmailCredentialsId()));
+		return response;
 	}
 }

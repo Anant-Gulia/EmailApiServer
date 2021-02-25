@@ -3,6 +3,7 @@ package com.app.model;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 public class SendEmailRequest {
+	
 	@JsonProperty(value = "sendersEmail", required = true)
 	private String sendersEmail;
 	@JsonProperty(value = "receiversEmail", required = true)
@@ -14,7 +15,6 @@ public class SendEmailRequest {
 
 	public SendEmailRequest() {
 		super();
-		// TODO Auto-generated constructor stub
 	}
 
 	public SendEmailRequest(String sendersEmail, String receiversEmail, String apiKey, String body) {

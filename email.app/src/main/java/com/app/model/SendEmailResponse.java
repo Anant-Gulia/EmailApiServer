@@ -1,12 +1,12 @@
 package com.app.model;
 
 public class SendEmailResponse {
+
 	private boolean error;
 	private String errorMessage;
 
 	public SendEmailResponse() {
 		super();
-		// TODO Auto-generated constructor stub
 	}
 
 	public SendEmailResponse(boolean error, String errorMessage) {

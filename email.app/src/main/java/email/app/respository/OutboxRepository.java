@@ -9,15 +9,10 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
-import email.app.entity.EmailCredentials;
-import email.app.entity.EmailInbox;
 import email.app.entity.EmailOutbox;
 
 @Repository
 public interface OutboxRepository extends JpaRepository<EmailOutbox, Integer> {
-
-	@Query(value = "SELECT * FROM email_outbox", nativeQuery = true)
-	public List<EmailOutbox> getAllRows();
 	
 	@Query(value = "SELECT * FROM email_inbox WHERE SENDER_ID = :SENDER_ID", nativeQuery = true)
 	public List<EmailOutbox> getEmails(@Param(value = "SENDER_ID") int senderId);

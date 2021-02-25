@@ -5,13 +5,13 @@ import java.util.List;
 import email.app.entity.EmailInbox;
 
 public class GetEmailResponse {
+	
 	private boolean error;
 	private String errorMessage;
 	private List<EmailInbox> emails;
 
 	public GetEmailResponse() {
 		super();
-		// TODO Auto-generated constructor stub
 	}
 
 	public GetEmailResponse(boolean error, String errorMessage, List<EmailInbox> emails) {

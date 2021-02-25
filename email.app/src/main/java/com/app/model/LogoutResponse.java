@@ -1,13 +1,12 @@
 package com.app.model;
 
 public class LogoutResponse {
-	
+
 	private boolean error;
 	private String errorMessage;
 
 	public LogoutResponse() {
 		super();
-		// TODO Auto-generated constructor stub
 	}
 
 	public LogoutResponse(boolean error, String errorMessage) {

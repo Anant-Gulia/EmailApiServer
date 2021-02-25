@@ -3,6 +3,7 @@ package com.app.model;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 public class LogoutRequest {
+	
 	@JsonProperty(value = "email", required = true)
 	private String email;
 	@JsonProperty(value = "apiKey", required = true)
